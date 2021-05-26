@@ -1,32 +1,35 @@
+# todo elim need for 2nd param
+
+import sys
 import urllib.request
 import re
+
 
 class IMDBInfoGrabber:
     @staticmethod
     def GetIMDBInfoForShow(imdbTitleID, seasonCount):
-        match = re.search("\d", "a8b")
         if type(imdbTitleID) != type("a string"):
-            print("First paramter was not type string")
+            print("IMDb Code was not type string")
             return ""
         if type(seasonCount) != type(1):
-            print("Second paramter was not type int")
+            print("Season Count was not type int")
             return ""
         if imdbTitleID == "":
-            print("First paramter was empty string")
+            print("IMDb Code was empty string")
             return ""
         if seasonCount < 0:
-            print("Second paramter was less than 1")
+            print("Season Count was less than 1")
             return ""
         if re.fullmatch("^tt\d+$", imdbTitleID) is None:
-            print("First parameter did not match expected format")
+            print("IMDb Code did not match expected format")
             return ""
 
         print(imdbTitleID)
-        ret = ""
+        ret = "Season,Episode,Air Date,Title,Rating,Rating Count\n"
         for i in range(1, seasonCount + 1):
             print("Working on Season " + str(i))
-            ret += IMDBInfoGrabber.__getEpisodeInfoForSeason(imdbTitleID, i) + "\n"
-
+            ret += IMDBInfoGrabber.__getEpisodeInfoForSeason(
+                imdbTitleID, i) + "\n"
 
         print("OK")
         return ret.strip()
@@ -42,21 +45,42 @@ class IMDBInfoGrabber:
         rateCount = re.compile(
             "(?<=ipl-rating-star__total-votes\">\()(\d{1,3},)*?\d{1,3}\)")
         csvLines = []
+        # todo give better message if url does not work
         with urllib.request.urlopen(f"https://www.imdb.com/title/{imdbTitleID}/episodes?season={seasonNumber}") as response:
             html = str(response.read())
-            matches = episodeBlockRe.findall(html)
-            for match in matches:
-                line = ""
-                line += str(seasonNumber) + ","
-                line += episodeNumberRe.search(match).group() + ","
-                line += airDateRe.search(match).group() + ","
+            episodeInfoBlocks = episodeBlockRe.findall(html)
+
+            for block in episodeInfoBlocks:
+                line = str(seasonNumber) + ","
+                line += episodeNumberRe.search(block).group() + ","
+                line += airDateRe.search(block).group() + ","
                 line += "\"" + \
-                    titleRe.search(match).group().rstrip(
+                    titleRe.search(block).group().rstrip(
                         " itemprop").replace("\\'", "'") + ","
-                line += ratingRe.search(match).group() + ","
-                line += rateCount.search(match).group().rstrip(")")
+                line += ratingRe.search(block).group() + ","
+                line += rateCount.search(block).group().replace(",",
+                                                                "").rstrip(")")
                 csvLines.append(line)
         return "\n".join(csvLines)
 
-with open("koth.csv", "w") as csv:
-    csv.write(IMDBInfoGrabber.GetIMDBInfoForShow("tt0118375", 13))
+
+def __main__():
+    if len(sys.argv) < 4:
+        print("Missing Arguments")
+        return
+
+    try:
+        seasonCount = int(sys.argv[2])
+    except:
+        print("Invalid Season Count: " + sys.argv[2])
+        return
+
+    try:
+        with open(sys.argv[3], "w") as csv:
+            csv.write(IMDBInfoGrabber.GetIMDBInfoForShow(
+                sys.argv[1], seasonCount))
+    except:
+        print(sys.exc_info()[1])
+
+
+__main__()
