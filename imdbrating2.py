@@ -25,11 +25,11 @@ class IMDBInfoGrabber:
         ret = ""
         for i in range(1, seasonCount + 1):
             print("Working on Season " + str(i))
-            ret += IMDBInfoGrabber.__getEpisodeInfoForSeason(imdbTitleID, i)
+            ret += IMDBInfoGrabber.__getEpisodeInfoForSeason(imdbTitleID, i) + "\n"
 
 
         print("OK")
-        return ret
+        return ret.strip()
 
     def __getEpisodeInfoForSeason(imdbTitleID, seasonNumber):
         episodeBlockRe = re.compile(
@@ -58,5 +58,5 @@ class IMDBInfoGrabber:
                 csvLines.append(line)
         return "\n".join(csvLines)
 
-
-print(IMDBInfoGrabber.GetIMDBInfoForShow("tt0197159", 4))
+with open("koth.csv", "w") as csv:
+    csv.write(IMDBInfoGrabber.GetIMDBInfoForShow("tt0118375", 13))
