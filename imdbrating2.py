@@ -1,5 +1,6 @@
 # speed up
 # could add some brief search feature?
+# this might be a good opportunity for async. do multiple seasons at once
 
 import sys
 import urllib.request
@@ -21,24 +22,23 @@ class IMDBInfoGrabber:
 
         print(imdbTitleID)
         print("Working on Season 1")
-
         csvText = "Season,Episode,Air Date,Title,Rating,Rating Count\n"
-        ret = IMDBInfoGrabber.__getEpisodeInfoForSeason(
-            imdbTitleID, 1)
-        csvText += ret[0]
-        seasonCount = ret[1]
+
+        seasonHTML = IMDBInfoGrabber.__getSeasonHTML(imdbTitleID, 1)
+        seasonCount = IMDBInfoGrabber.__getSeasonCount(seasonHTML)
+        csvText += IMDBInfoGrabber.__getEpisodeInfoForSeason(
+            seasonHTML, 1)
 
         for i in range(2, seasonCount + 1):
             print("Working on Season " + str(i))
-            ret = IMDBInfoGrabber.__getEpisodeInfoForSeason(
-                imdbTitleID, i)
-            csvText += ret[0]
+            seasonHTML = IMDBInfoGrabber.__getSeasonHTML(imdbTitleID, i)
+            csvText += IMDBInfoGrabber.__getEpisodeInfoForSeason(
+                seasonHTML, i)
 
         print("OK")
         return csvText.strip()
 
-    # this function does two things
-    def __getEpisodeInfoForSeason(imdbTitleID, seasonNumber):
+    def __getEpisodeInfoForSeason(html, seasonNumber):
         # todo could this be sped up by using find inside the block instead of regex?
         episodeBlockRe = re.compile(
             "<div class=\"info\" itemprop=\"episodes\".*?</div>.*?ipl-rating-star__total-votes.*?</span>", re.DOTALL)
@@ -50,32 +50,29 @@ class IMDBInfoGrabber:
         rateCount = re.compile(
             "(?<=ipl-rating-star__total-votes\">\()(\d{1,3},)*?\d{1,3}\)")
         csvLines = []
+        episodeInfoBlocksHTML = episodeBlockRe.findall(html)
+
+        for block in episodeInfoBlocksHTML:
+            line = str(seasonNumber) + ","
+            line += episodeNumberRe.search(block).group() + ","
+            line += airDateRe.search(block).group() + ","
+            line += "\"" + \
+                titleRe.search(block).group().rstrip(
+                    " itemprop").replace("\\'", "'") + ","
+            line += ratingRe.search(block).group() + ","
+            line += rateCount.search(block).group().replace(",",
+                                                            "").rstrip(")")
+            csvLines.append(line)
+
+        return "\n".join(csvLines) + "\n"
+
+    def __getSeasonHTML(imdbTitleID, seasonNumber):
         # todo give better message if url does not work
         with urllib.request.urlopen(f"https://www.imdb.com/title/{imdbTitleID}/episodes?season={seasonNumber}") as response:
-            html = str(response.read())
-            episodeInfoBlocksHTML = episodeBlockRe.findall(html)
-
-            for block in episodeInfoBlocksHTML:
-                line = str(seasonNumber) + ","
-                line += episodeNumberRe.search(block).group() + ","
-                line += airDateRe.search(block).group() + ","
-                line += "\"" + \
-                    titleRe.search(block).group().rstrip(
-                        " itemprop").replace("\\'", "'") + ","
-                line += ratingRe.search(block).group() + ","
-                line += rateCount.search(block).group().replace(",",
-                                                                "").rstrip(")")
-                csvLines.append(line)
-
-            seasonCount = -1
-            if seasonNumber == 1:
-                seasonDropdownHTML = re.search(
-                    "<select id=\"bySeason\".*?</select>", html).group()
-                seasonCount = len(re.findall(
-                    "<option.*?</option>", seasonDropdownHTML))
-
-        return "\n".join(csvLines) + "\n", seasonCount
-
+            return str(response.read())
+    def __getSeasonCount(html):
+        seasonDropdownHTML = re.search("<select id=\"bySeason\".*?</select>", html).group()
+        return len(re.findall("<option.*?</option>", seasonDropdownHTML))
 
 def __main__():
     if len(sys.argv) < 3:
