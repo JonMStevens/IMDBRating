@@ -31,12 +31,13 @@ class IMDBInfoGrabber:
         for i in range(2, seasonCount + 1):
             print("Working on Season " + str(i))
             ret = IMDBInfoGrabber.__getEpisodeInfoForSeason(
-                imdbTitleID, 1)
+                imdbTitleID, i)
             csvText += ret[0]
 
         print("OK")
         return csvText.strip()
 
+    # this function does two things
     def __getEpisodeInfoForSeason(imdbTitleID, seasonNumber):
         # todo could this be sped up by using find inside the block instead of regex?
         episodeBlockRe = re.compile(
@@ -73,7 +74,7 @@ class IMDBInfoGrabber:
                 seasonCount = len(re.findall(
                     "<option.*?</option>", seasonDropdownHTML))
 
-        return "\n".join(csvLines), seasonCount
+        return "\n".join(csvLines) + "\n", seasonCount
 
 
 def __main__():
