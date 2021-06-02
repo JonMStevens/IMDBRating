@@ -1,5 +1,6 @@
 # IMDBRating
-Python script that gets info about TV episodes from IMDb and lists that info in a CSV.
+Python script that gets info about TV episodes from IMDb and lists that info in a CSV. This information includes the season number, episode number, air date, title, average rating on IMDb, and the number of ratings the episode recieved. This file can then be input into a spreadsheet program and allow you to see trends, high points, and low points in fan reception of a particular series.
+
 Running the script from the command line will look something like:
 >python imdbrating.py tt0197159 example.csv
 
