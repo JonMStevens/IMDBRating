@@ -78,7 +78,7 @@ class IMDBInfoGrabber:
         csv_lines = []
         episode_info_blocks_html = episode_block_re.findall(html)
 
-        if (len(episode_info_blocks_html) == 0):
+        if len(episode_info_blocks_html) == 0:
             raise error(
                 "Could not find episodes for this show. This script may need fixing")
 
