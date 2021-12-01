@@ -127,34 +127,41 @@ class IMDBInfoGrabber:
 
         return len(re.findall("<option.*?</option>", season_dropdown_html))
 
-def imdbCodeType(codeStr):
-    if type(codeStr) != type("a string"):
+def imdb_code_type(code_str):
+    """argument type checker for imdb code str"""
+    if not isinstance(code_str, str):
         raise argparse.ArgumentTypeError("IMDb Code was not type string")
-    if codeStr == "":
+    if code_str == "":
         raise argparse.ArgumentTypeError("IMDb Code was empty string")
-    if re.fullmatch("^tt\d+$", codeStr) is None:
+    if re.fullmatch(r"^tt\d+$", code_str) is None:
         raise argparse.ArgumentTypeError("IMDb Code did not match expected format")
-    return codeStr
+    return code_str
 
-def csvFileType(pathStr):
-    if type(pathStr) != type("a string"):
+def csv_file_type(path_str):
+    """argument type checker for csv file name"""
+    if not isinstance(path_str, str):
         raise argparse.ArgumentTypeError("CSV file name parameter was not a string")
-    if pathStr == "":
+    if path_str == "":
         raise argparse.ArgumentTypeError("CSV file name parameter was empty string")
-    if re.match("^[\w,\s-]+\.csv$", pathStr) is None:
-        raise argparse.ArgumentTypeError("CSV file name parameter not in the correct format. It should be something like example.csv")
-    return pathStr
+    if re.match(r"^[\w,\s-]+\.csv$", path_str) is None:
+        raise argparse.ArgumentTypeError("CSV file name parameter not in the correct format. "
+        "It should be something like example.csv")
+    return path_str
 
 def __main__():
     parser = argparse.ArgumentParser()
-    parser.add_argument("imdb_code", type=imdbCodeType, help="Code associated with a show on IMDb found in the url on the main page. It will contain two lower-case t's followed by some (about seven) digits.")
-    parser.add_argument("csv_file_name", type=csvFileType, help="File name with a .csv extension. If this file already exists it will be overwitten.")
+    parser.add_argument("imdb_code", type=imdb_code_type,
+        help="Code associated with a show on IMDb found in the url on the main page."
+        " It will contain two lower-case t's followed by some (about seven) digits.")
+    parser.add_argument("csv_file_name", type=csv_file_type,
+        help="File name with a .csv extension."
+        " If this file already exists it will be overwitten.")
     args = parser.parse_args(sys.argv[1:])
 
     try:
-        with open(sys.argv[2], "w", encoding="utf-8") as csv:
+        with open(args.csv_file_name, "w", encoding="utf-8") as csv:
             csv.write(IMDBInfoGrabber.get_imdb_info_for_show(
-                sys.argv[1]))
+                args.imdb_code))
     except error:
         print(sys.exc_info()[1])
 
