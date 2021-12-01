@@ -74,17 +74,17 @@ class IMDBInfoGrabber:
         try:
             with urllib.request.urlopen(f"https://www.imdb.com/title/{imdbTitleID}/episodes?season={seasonNumber}") as response:
                 return str(response.read())
-        except:
+        except error as e:
             raise ValueError(
-                "A season page could not be found using the given IMDb Title ID")
+                "A season page could not be found using the given IMDb Title ID") from e
     @staticmethod
     def __getSeasonCount(html):
         try:
             seasonDropdownHTML = re.search(
                 "<select id=\"bySeason\".*?</select>", html).group()
-        except:
+        except error as e:
             raise error(
-                "Could not find number of seasons in given HTML. This script may need fixing")
+                "Could not find number of seasons in given HTML. This script may need fixing") from e
 
         return len(re.findall("<option.*?</option>", seasonDropdownHTML))
 
@@ -107,7 +107,7 @@ def __main__():
         with open(sys.argv[2], "w") as csv:
             csv.write(IMDBInfoGrabber.GetIMDBInfoForShow(
                 sys.argv[1]))
-    except:
+    except error:
         print(sys.exc_info()[1])
 
 
