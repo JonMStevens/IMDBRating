@@ -36,6 +36,7 @@ class IMDBInfoGrabber:
         print("OK")
         return csvText.strip()
 
+    @staticmethod
     def __getEpisodeInfoForSeason(html, seasonNumber):
         # todo could this be sped up by using find inside the block instead of regex?
         episodeBlockRe = re.compile(
@@ -68,6 +69,7 @@ class IMDBInfoGrabber:
 
         return "\n".join(csvLines) + "\n"
 
+    @staticmethod
     def __getSeasonHTML(imdbTitleID, seasonNumber):
         try:
             with urllib.request.urlopen(f"https://www.imdb.com/title/{imdbTitleID}/episodes?season={seasonNumber}") as response:
@@ -75,7 +77,7 @@ class IMDBInfoGrabber:
         except:
             raise ValueError(
                 "A season page could not be found using the given IMDb Title ID")
-
+    @staticmethod
     def __getSeasonCount(html):
         try:
             seasonDropdownHTML = re.search(
