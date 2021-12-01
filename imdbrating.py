@@ -6,18 +6,11 @@ from os import error
 import sys
 import urllib.request
 import re
-
+import argparse
 
 class IMDBInfoGrabber:
     @staticmethod
     def GetIMDBInfoForShow(imdbTitleID):
-        if type(imdbTitleID) != type("a string"):
-            raise TypeError("IMDb Code was not type string")
-        if imdbTitleID == "":
-            raise ValueError("IMDb Code was empty string")
-        if re.fullmatch("^tt\d+$", imdbTitleID) is None:
-            raise ValueError("IMDb Code did not match expected format")
-
         print(imdbTitleID)
         print("Working on Season 1")
         csvText = "Season,Episode,Air Date,Title,Rating,Rating Count\n"
@@ -86,25 +79,34 @@ class IMDBInfoGrabber:
 
         return len(re.findall("<option.*?</option>", seasonDropdownHTML))
 
+def imdbCodeType(codeStr):
+    if type(codeStr) != type("a string"):
+        raise argparse.ArgumentTypeError("IMDb Code was not type string")
+    if codeStr == "":
+        raise argparse.ArgumentTypeError("IMDb Code was empty string")
+    if re.fullmatch("^tt\d+$", codeStr) is None:
+        raise argparse.ArgumentTypeError("IMDb Code did not match expected format")
+    return codeStr
+
+def csvFileType(pathStr):
+    if type(pathStr) != type("a string"):
+        raise argparse.ArgumentTypeError("CSV file name parameter was not a string")
+    if pathStr == "":
+        raise argparse.ArgumentTypeError("CSV file name parameter was empty string")
+    if re.match("^[\w,\s-]+\.csv$", pathStr) is None:
+        raise argparse.ArgumentTypeError("CSV file name parameter not in the correct format. It should be something like example.csv")
+    return pathStr
 
 def __main__():
-    if len(sys.argv) != 3:
-        print("Missing Arguments")
-        return
-    if type(sys.argv[2]) != type("a string"):
-        print("CSV file name parameter was not a string")
-        return
-    if sys.argv[2] == "":
-        print("CSV file name parameter was empty string")
-        return
-    if re.match("^[\w,\s-]+\.csv$", sys.argv[2]) is None:
-        print("CSV file name parameter not in the correct format. It should be something like example.csv")
-        return
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument("imdb", type=imdbCodeType)
+    parser.add_argument("csv", type=csvFileType)
+    args = parser.parse_args(sys.argv[1:])
+  
     try:
-        with open(sys.argv[2], "w") as csv:
+        with open(args.csv, "w") as csv:
             csv.write(IMDBInfoGrabber.GetIMDBInfoForShow(
-                sys.argv[1]))
+                args.imdb))
     except:
         print(sys.exc_info()[1])
 
