@@ -66,7 +66,8 @@ class IMDBInfoGrabber:
         """
         # todo could this be sped up by using find inside the block instead of regex?
         episode_block_re = re.compile(
-            r"<div class=\"info\" itemprop=\"episodes\".*?</div>.*?ipl-rating-star__total-votes.*?</span>", re.DOTALL)
+            r"<div class=\"info\" itemprop=\"episodes\".*?"
+            r"</div>.*?ipl-rating-star__total-votes.*?</span>", re.DOTALL)
         episode_number_re = re.compile(r"(?<=episodeNumber\" content=\")\d+")
         air_date_re = re.compile(
             r"(?<=airdate\">..            )\d{1,2} [A-Z][a-z]{2}\.? \d{2,4}")
@@ -107,7 +108,8 @@ class IMDBInfoGrabber:
         string -- html
         """
         try:
-            with urllib.request.urlopen(f"https://www.imdb.com/title/{imdb_title_id}/episodes?season={season_number}") as response:
+            with urllib.request.urlopen("https://www.imdb.com/title/"
+            f"{imdb_title_id}/episodes?season={season_number}") as response:
                 return str(response.read())
         except error as e:
             raise ValueError(
@@ -127,7 +129,8 @@ class IMDBInfoGrabber:
                 "<select id=\"bySeason\".*?</select>", html).group()
         except error as e:
             raise error(
-                "Could not find number of seasons in given HTML. This script may need fixing") from e
+                "Could not find number of seasons in given HTML."
+                " This script may need fixing") from e
 
         return len(re.findall("<option.*?</option>", season_dropdown_html))
 
@@ -143,7 +146,8 @@ def __main__():
         print("CSV file name parameter was empty string")
         return
     if re.match(r"^[\w,\s-]+\.csv$", sys.argv[2]) is None:
-        print("CSV file name parameter not in the correct format. It should be something like example.csv")
+        print("CSV file name parameter not in the correct format."
+        " It should be something like example.csv")
         return
 
     try:
