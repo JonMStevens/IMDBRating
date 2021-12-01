@@ -28,7 +28,7 @@ class IMDBInfoGrabber:
         returns:
         string -- csv contents
         """
-        if type(imdbTitleID) != type("a string"):
+        if not isinstance(imdbTitleID, str):
             raise TypeError("IMDb Code was not type string")
         if imdbTitleID == "":
             raise ValueError("IMDb Code was empty string")
@@ -136,7 +136,7 @@ def __main__():
     if len(sys.argv) != 3:
         print("Missing Arguments")
         return
-    if type(sys.argv[2]) != type("a string"):
+    if not isinstance(sys.argv[2], str):
         print("CSV file name parameter was not a string")
         return
     if sys.argv[2] == "":
