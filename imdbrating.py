@@ -1,3 +1,7 @@
+"""script for retrieving imdb stats for a tv show on imdb, and writing to csv.
+Call static method GetIMDBInfoForShow,
+pass in an imdb code (found in url) and write returned string to file
+"""
 # speed up
 # could add some brief search feature?
 # this might be a good opportunity for async. do multiple seasons at once
@@ -9,8 +13,21 @@ import re
 
 
 class IMDBInfoGrabber:
+    """class used for retrieving csv info.
+    Main method is GetIMDBInfoForShow
+    """
     @staticmethod
     def GetIMDBInfoForShow(imdbTitleID):
+        """Returns info to write to csv
+
+        arguments:
+        imdbTitleID (string) -- code associated with a show on IMDb.
+        Can be found in the url for the show.
+        Looks like two lowercase t's followed by digits
+
+        returns:
+        string -- csv contents
+        """
         if type(imdbTitleID) != type("a string"):
             raise TypeError("IMDb Code was not type string")
         if imdbTitleID == "":
@@ -38,6 +55,15 @@ class IMDBInfoGrabber:
 
     @staticmethod
     def __getEpisodeInfoForSeason(html, seasonNumber):
+        """Helper function that gets stats for each episode of a season
+
+        arguments
+        html (string) -- html from the page of a season
+        seasonNumber (string or int) -- nth season
+
+        return:
+        string -- episode stats. stats separated by commas, each episode separated by newline
+        """
         # todo could this be sped up by using find inside the block instead of regex?
         episodeBlockRe = re.compile(
             r"<div class=\"info\" itemprop=\"episodes\".*?</div>.*?ipl-rating-star__total-votes.*?</span>", re.DOTALL)
@@ -71,6 +97,15 @@ class IMDBInfoGrabber:
 
     @staticmethod
     def __getSeasonHTML(imdbTitleID, seasonNumber):
+        """helper function that retrieves html for a season of a show
+
+        arguments:
+        imdbTitleID (string) -- imdb title id code
+        seasonNumber (string or int) -- nth season
+
+        return:
+        string -- html
+        """
         try:
             with urllib.request.urlopen(f"https://www.imdb.com/title/{imdbTitleID}/episodes?season={seasonNumber}") as response:
                 return str(response.read())
@@ -79,6 +114,14 @@ class IMDBInfoGrabber:
                 "A season page could not be found using the given IMDb Title ID") from e
     @staticmethod
     def __getSeasonCount(html):
+        """helper function that returns number of seasons that a show has
+
+        arguments:
+        html (string) -- html from the page of a season, usually the first.
+
+        return:
+        int -- season count
+        """
         try:
             seasonDropdownHTML = re.search(
                 "<select id=\"bySeason\".*?</select>", html).group()
