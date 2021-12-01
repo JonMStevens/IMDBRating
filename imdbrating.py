@@ -99,14 +99,14 @@ def csvFileType(pathStr):
 
 def __main__():
     parser = argparse.ArgumentParser()
-    parser.add_argument("imdb", type=imdbCodeType)
-    parser.add_argument("csv", type=csvFileType)
+    parser.add_argument("imdb_code", type=imdbCodeType, help="Code associated with a show on IMDb found in the url on the main page. It will contain two lower-case t's followed by some (about seven) digits.")
+    parser.add_argument("csv_file_name", type=csvFileType, help="File name with a .csv extension. If this file already exists it will be overwitten.")
     args = parser.parse_args(sys.argv[1:])
   
     try:
-        with open(args.csv, "w") as csv:
+        with open(args.csv_file_name, "w") as csv:
             csv.write(IMDBInfoGrabber.GetIMDBInfoForShow(
-                args.imdb))
+                args.imdb_code))
     except:
         print(sys.exc_info()[1])
 
