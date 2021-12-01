@@ -15,7 +15,7 @@ class IMDBInfoGrabber:
             raise TypeError("IMDb Code was not type string")
         if imdbTitleID == "":
             raise ValueError("IMDb Code was empty string")
-        if re.fullmatch("^tt\d+$", imdbTitleID) is None:
+        if re.fullmatch(r"^tt\d+$", imdbTitleID) is None:
             raise ValueError("IMDb Code did not match expected format")
 
         print(imdbTitleID)
@@ -40,14 +40,14 @@ class IMDBInfoGrabber:
     def __getEpisodeInfoForSeason(html, seasonNumber):
         # todo could this be sped up by using find inside the block instead of regex?
         episodeBlockRe = re.compile(
-            "<div class=\"info\" itemprop=\"episodes\".*?</div>.*?ipl-rating-star__total-votes.*?</span>", re.DOTALL)
-        episodeNumberRe = re.compile("(?<=episodeNumber\" content=\")\d+")
+            r"<div class=\"info\" itemprop=\"episodes\".*?</div>.*?ipl-rating-star__total-votes.*?</span>", re.DOTALL)
+        episodeNumberRe = re.compile(r"(?<=episodeNumber\" content=\")\d+")
         airDateRe = re.compile(
-            "(?<=airdate\">..            )\d{1,2} [A-Z][a-z]{2}\.? \d{2,4}")
-        titleRe = re.compile("(?<=title=\").*\" itemprop")
-        ratingRe = re.compile("(?<=ipl-rating-star__rating\">)\d\.\d")
+            r"(?<=airdate\">..            )\d{1,2} [A-Z][a-z]{2}\.? \d{2,4}")
+        titleRe = re.compile(r"(?<=title=\").*\" itemprop")
+        ratingRe = re.compile(r"(?<=ipl-rating-star__rating\">)\d\.\d")
         rateCount = re.compile(
-            "(?<=ipl-rating-star__total-votes\">\()(\d{1,3},)*?\d{1,3}\)")
+            r"(?<=ipl-rating-star__total-votes\">\()(\d{1,3},)*?\d{1,3}\)")
         csvLines = []
         episodeInfoBlocksHTML = episodeBlockRe.findall(html)
 
@@ -99,7 +99,7 @@ def __main__():
     if sys.argv[2] == "":
         print("CSV file name parameter was empty string")
         return
-    if re.match("^[\w,\s-]+\.csv$", sys.argv[2]) is None:
+    if re.match(r"^[\w,\s-]+\.csv$", sys.argv[2]) is None:
         print("CSV file name parameter not in the correct format. It should be something like example.csv")
         return
 
