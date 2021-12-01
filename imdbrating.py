@@ -104,7 +104,7 @@ def __main__():
         return
 
     try:
-        with open(sys.argv[2], "w") as csv:
+        with open(sys.argv[2], "w", encoding="utf-8") as csv:
             csv.write(IMDBInfoGrabber.GetIMDBInfoForShow(
                 sys.argv[1]))
     except error:
