@@ -1,5 +1,5 @@
 """script for retrieving imdb stats for a tv show on imdb, and writing to csv.
-Call static method GetIMDBInfoForShow,
+Call static method get_imdb_info_for_show,
 pass in an imdb code (found in url) and write returned string to file
 """
 # speed up
@@ -14,106 +14,106 @@ import re
 
 class IMDBInfoGrabber:
     """class used for retrieving csv info.
-    Main method is GetIMDBInfoForShow
+    Main method is get_imdb_info_for_show
     """
     @staticmethod
-    def GetIMDBInfoForShow(imdbTitleID):
+    def get_imdb_info_for_show(imdb_title_id):
         """Returns info to write to csv
 
         arguments:
-        imdbTitleID (string) -- code associated with a show on IMDb.
+        imdb_title_id (string) -- code associated with a show on IMDb.
         Can be found in the url for the show.
         Looks like two lowercase t's followed by digits
 
         returns:
         string -- csv contents
         """
-        if not isinstance(imdbTitleID, str):
+        if not isinstance(imdb_title_id, str):
             raise TypeError("IMDb Code was not type string")
-        if imdbTitleID == "":
+        if imdb_title_id == "":
             raise ValueError("IMDb Code was empty string")
-        if re.fullmatch(r"^tt\d+$", imdbTitleID) is None:
+        if re.fullmatch(r"^tt\d+$", imdb_title_id) is None:
             raise ValueError("IMDb Code did not match expected format")
 
-        print(imdbTitleID)
+        print(imdb_title_id)
         print("Working on Season 1")
-        csvText = "Season,Episode,Air Date,Title,Rating,Rating Count\n"
+        csv_text = "Season,Episode,Air Date,Title,Rating,Rating Count\n"
 
-        seasonHTML = IMDBInfoGrabber.__getSeasonHTML(imdbTitleID, 1)
-        seasonCount = IMDBInfoGrabber.__getSeasonCount(seasonHTML)
-        csvText += IMDBInfoGrabber.__getEpisodeInfoForSeason(
-            seasonHTML, 1)
+        season_html = IMDBInfoGrabber.__get_season_html(imdb_title_id, 1)
+        season__count = IMDBInfoGrabber.__get_season_count(season_html)
+        csv_text += IMDBInfoGrabber.__get_episode_info_for_season(
+            season_html, 1)
 
-        for i in range(2, seasonCount + 1):
+        for i in range(2, season__count + 1):
             print("Working on Season " + str(i))
-            seasonHTML = IMDBInfoGrabber.__getSeasonHTML(imdbTitleID, i)
-            csvText += IMDBInfoGrabber.__getEpisodeInfoForSeason(
-                seasonHTML, i)
+            season_html = IMDBInfoGrabber.__get_season_html(imdb_title_id, i)
+            csv_text += IMDBInfoGrabber.__get_episode_info_for_season(
+                season_html, i)
 
         print("OK")
-        return csvText.strip()
+        return csv_text.strip()
 
     @staticmethod
-    def __getEpisodeInfoForSeason(html, seasonNumber):
+    def __get_episode_info_for_season(html, season_number):
         """Helper function that gets stats for each episode of a season
 
         arguments
         html (string) -- html from the page of a season
-        seasonNumber (string or int) -- nth season
+        season_number (string or int) -- nth season
 
         return:
         string -- episode stats. stats separated by commas, each episode separated by newline
         """
         # todo could this be sped up by using find inside the block instead of regex?
-        episodeBlockRe = re.compile(
+        episode_block_re = re.compile(
             r"<div class=\"info\" itemprop=\"episodes\".*?</div>.*?ipl-rating-star__total-votes.*?</span>", re.DOTALL)
-        episodeNumberRe = re.compile(r"(?<=episodeNumber\" content=\")\d+")
-        airDateRe = re.compile(
+        episode_number_re = re.compile(r"(?<=episodeNumber\" content=\")\d+")
+        air_date_re = re.compile(
             r"(?<=airdate\">..            )\d{1,2} [A-Z][a-z]{2}\.? \d{2,4}")
-        titleRe = re.compile(r"(?<=title=\").*\" itemprop")
-        ratingRe = re.compile(r"(?<=ipl-rating-star__rating\">)\d\.\d")
-        rateCount = re.compile(
+        title_re = re.compile(r"(?<=title=\").*\" itemprop")
+        rating_re = re.compile(r"(?<=ipl-rating-star__rating\">)\d\.\d")
+        rate_count = re.compile(
             r"(?<=ipl-rating-star__total-votes\">\()(\d{1,3},)*?\d{1,3}\)")
-        csvLines = []
-        episodeInfoBlocksHTML = episodeBlockRe.findall(html)
+        csv_lines = []
+        episode_info_blocks_html = episode_block_re.findall(html)
 
-        if (len(episodeInfoBlocksHTML) == 0):
+        if (len(episode_info_blocks_html) == 0):
             raise error(
                 "Could not find episodes for this show. This script may need fixing")
 
-        for block in episodeInfoBlocksHTML:
-            line = str(seasonNumber) + ","
-            line += episodeNumberRe.search(block).group() + ","
-            line += airDateRe.search(block).group() + ","
+        for block in episode_info_blocks_html:
+            line = str(season_number) + ","
+            line += episode_number_re.search(block).group() + ","
+            line += air_date_re.search(block).group() + ","
             line += "\"" + \
-                titleRe.search(block).group().rstrip(
+                title_re.search(block).group().rstrip(
                     " itemprop").replace("\\'", "'") + ","
-            line += ratingRe.search(block).group() + ","
-            line += rateCount.search(block).group().replace(",",
+            line += rating_re.search(block).group() + ","
+            line += rate_count.search(block).group().replace(",",
                                                             "").rstrip(")")
-            csvLines.append(line)
+            csv_lines.append(line)
 
-        return "\n".join(csvLines) + "\n"
+        return "\n".join(csv_lines) + "\n"
 
     @staticmethod
-    def __getSeasonHTML(imdbTitleID, seasonNumber):
+    def __get_season_html(imdb_title_id, season_number):
         """helper function that retrieves html for a season of a show
 
         arguments:
-        imdbTitleID (string) -- imdb title id code
-        seasonNumber (string or int) -- nth season
+        imdb_title_id (string) -- imdb title id code
+        season_number (string or int) -- nth season
 
         return:
         string -- html
         """
         try:
-            with urllib.request.urlopen(f"https://www.imdb.com/title/{imdbTitleID}/episodes?season={seasonNumber}") as response:
+            with urllib.request.urlopen(f"https://www.imdb.com/title/{imdb_title_id}/episodes?season={season_number}") as response:
                 return str(response.read())
         except error as e:
             raise ValueError(
                 "A season page could not be found using the given IMDb Title ID") from e
     @staticmethod
-    def __getSeasonCount(html):
+    def __get_season_count(html):
         """helper function that returns number of seasons that a show has
 
         arguments:
@@ -123,13 +123,13 @@ class IMDBInfoGrabber:
         int -- season count
         """
         try:
-            seasonDropdownHTML = re.search(
+            season_dropdown_html = re.search(
                 "<select id=\"bySeason\".*?</select>", html).group()
         except error as e:
             raise error(
                 "Could not find number of seasons in given HTML. This script may need fixing") from e
 
-        return len(re.findall("<option.*?</option>", seasonDropdownHTML))
+        return len(re.findall("<option.*?</option>", season_dropdown_html))
 
 
 def __main__():
@@ -148,7 +148,7 @@ def __main__():
 
     try:
         with open(sys.argv[2], "w", encoding="utf-8") as csv:
-            csv.write(IMDBInfoGrabber.GetIMDBInfoForShow(
+            csv.write(IMDBInfoGrabber.get_imdb_info_for_show(
                 sys.argv[1]))
     except error:
         print(sys.exc_info()[1])
