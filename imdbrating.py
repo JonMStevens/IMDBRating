@@ -9,6 +9,7 @@ pass in an imdb code (found in url) and write returned string to file
 from os import error
 import sys
 import urllib.request
+import urllib.parse
 import re
 import argparse
 
@@ -136,7 +137,11 @@ def imdb_code_type(code_str):
     if re.fullmatch(r"^tt\d+$", code_str) is None:
         raise argparse.ArgumentTypeError("IMDb Code did not match expected format")
     return code_str
-
+def imdb_url_type(url):
+    """argument type checker for imdb url str"""
+    imdb_code_re = re.compile(r"tt\d+/")
+    imdb_code = imdb_code_re.search(urllib.parse.urlparse(url).path).group().rstrip("/")
+    return imdb_code_type(imdb_code)
 def csv_file_type(path_str):
     """argument type checker for csv file name"""
     if not isinstance(path_str, str):
@@ -153,10 +158,19 @@ def csv_file_type(path_str):
         raise argparse.ArgumentTypeError("CSV file could not be opened using file name:"
         f" '{path_str}'") from os_error
 
-
+#current: imdbrating.py [-h] [-url] imdb_url|imdb_code csv_file
+#  --url .url | --code code
+# imdbrating.py url .com .csv | imdbrating.py code code .csv
 def __main__():
     parser = argparse.ArgumentParser()
-    parser.add_argument("imdb_code", type=imdb_code_type,
+    parser.add_argument("-url", action="store_true")
+    args = parser.parse_known_args()
+
+    if args[0].url:
+        parser.add_argument("imdb_url", type=imdb_url_type,
+        help="url of a show on imdb.")
+    else:
+        parser.add_argument("imdb_code", type=imdb_code_type,
         help="Code associated with a show on IMDb found in the url on the main page."
         " It will contain two lower-case t's followed by some (about seven) digits.")
     parser.add_argument("csv_file", type=csv_file_type,
@@ -167,7 +181,7 @@ def __main__():
     try:
         with args.csv_file as csv:
             csv.write(IMDBInfoGrabber.get_imdb_info_for_show(
-                args.imdb_code))
+                args.imdb_url if args.url else args.imdb_code))
     except error:
         print(sys.exc_info()[1])
 
