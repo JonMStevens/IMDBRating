@@ -146,24 +146,29 @@ def csv_file_type(path_str):
     if re.match(r"^[\w,\s-]+\.csv$", path_str) is None:
         raise argparse.ArgumentTypeError("CSV file name parameter not in the correct format. "
         "It should be something like example.csv")
-    return path_str
+    try:
+        return open(path_str, "w", encoding="utf-8")
+    except OSError as os_error:
+        print (type(error))
+        raise argparse.ArgumentTypeError("CSV file could not be opened using file name:"
+        f" '{path_str}'") from os_error
+
 
 def __main__():
     parser = argparse.ArgumentParser()
     parser.add_argument("imdb_code", type=imdb_code_type,
         help="Code associated with a show on IMDb found in the url on the main page."
         " It will contain two lower-case t's followed by some (about seven) digits.")
-    parser.add_argument("csv_file_name", type=csv_file_type,
+    parser.add_argument("csv_file", type=csv_file_type,
         help="File name with a .csv extension."
         " If this file already exists it will be overwitten.")
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args()
 
     try:
-        with open(args.csv_file_name, "w", encoding="utf-8") as csv:
+        with args.csv_file as csv:
             csv.write(IMDBInfoGrabber.get_imdb_info_for_show(
                 args.imdb_code))
     except error:
         print(sys.exc_info()[1])
-
 
 __main__()
