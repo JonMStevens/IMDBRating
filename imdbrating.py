@@ -10,7 +10,7 @@ from os import error
 import sys
 import urllib.request
 import re
-
+import argparse
 
 class IMDBInfoGrabber:
     """class used for retrieving csv info.
@@ -28,13 +28,6 @@ class IMDBInfoGrabber:
         returns:
         string -- csv contents
         """
-        if not isinstance(imdb_title_id, str):
-            raise TypeError("IMDb Code was not type string")
-        if imdb_title_id == "":
-            raise ValueError("IMDb Code was empty string")
-        if re.fullmatch(r"^tt\d+$", imdb_title_id) is None:
-            raise ValueError("IMDb Code did not match expected format")
-
         print(imdb_title_id)
         print("Working on Season 1")
         csv_text = "Season,Episode,Air Date,Title,Rating,Rating Count\n"
@@ -134,28 +127,48 @@ class IMDBInfoGrabber:
 
         return len(re.findall("<option.*?</option>", season_dropdown_html))
 
+def imdb_code_type(code_str):
+    """argument type checker for imdb code str"""
+    if not isinstance(code_str, str):
+        raise argparse.ArgumentTypeError("IMDb Code was not type string")
+    if code_str == "":
+        raise argparse.ArgumentTypeError("IMDb Code was empty string")
+    if re.fullmatch(r"^tt\d+$", code_str) is None:
+        raise argparse.ArgumentTypeError("IMDb Code did not match expected format")
+    return code_str
+
+def csv_file_type(path_str):
+    """argument type checker for csv file name"""
+    if not isinstance(path_str, str):
+        raise argparse.ArgumentTypeError("CSV file name parameter was not a string")
+    if path_str == "":
+        raise argparse.ArgumentTypeError("CSV file name parameter was empty string")
+    if re.match(r"^[\w,\s-]+\.csv$", path_str) is None:
+        raise argparse.ArgumentTypeError("CSV file name parameter not in the correct format. "
+        "It should be something like example.csv")
+    try:
+        return open(path_str, "w", encoding="utf-8")
+    except OSError as os_error:
+        print (type(error))
+        raise argparse.ArgumentTypeError("CSV file could not be opened using file name:"
+        f" '{path_str}'") from os_error
+
 
 def __main__():
-    if len(sys.argv) != 3:
-        print("Missing Arguments")
-        return
-    if not isinstance(sys.argv[2], str):
-        print("CSV file name parameter was not a string")
-        return
-    if sys.argv[2] == "":
-        print("CSV file name parameter was empty string")
-        return
-    if re.match(r"^[\w,\s-]+\.csv$", sys.argv[2]) is None:
-        print("CSV file name parameter not in the correct format."
-        " It should be something like example.csv")
-        return
+    parser = argparse.ArgumentParser()
+    parser.add_argument("imdb_code", type=imdb_code_type,
+        help="Code associated with a show on IMDb found in the url on the main page."
+        " It will contain two lower-case t's followed by some (about seven) digits.")
+    parser.add_argument("csv_file", type=csv_file_type,
+        help="File name with a .csv extension."
+        " If this file already exists it will be overwitten.")
+    args = parser.parse_args()
 
     try:
-        with open(sys.argv[2], "w", encoding="utf-8") as csv:
+        with args.csv_file as csv:
             csv.write(IMDBInfoGrabber.get_imdb_info_for_show(
-                sys.argv[1]))
+                args.imdb_code))
     except error:
         print(sys.exc_info()[1])
-
 
 __main__()
