@@ -139,8 +139,17 @@ def imdb_code_type(code_str):
     return code_str
 def imdb_url_type(url):
     """argument type checker for imdb url str"""
+    if not isinstance(url, str):
+        raise argparse.ArgumentTypeError("URL was not type string")
+    if url == "":
+        raise argparse.ArgumentTypeError("URL was empty string")
     imdb_code_re = re.compile(r"tt\d+/")
-    imdb_code = imdb_code_re.search(urllib.parse.urlparse(url).path).group().rstrip("/")
+    try:
+        imdb_code = imdb_code_re.search(urllib.parse.urlparse(url).path).group().rstrip("/")
+    except AttributeError as e:
+        raise argparse.ArgumentTypeError("Could not find idmb code with given URL."
+        " URL must be from a TV show or TV season page on IMDb."
+        ) from e
     return imdb_code_type(imdb_code)
 def csv_file_type(path_str):
     """argument type checker for csv file name"""
