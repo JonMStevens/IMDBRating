@@ -167,30 +167,30 @@ def csv_file_type(path_str):
         raise argparse.ArgumentTypeError("CSV file could not be opened using file name:"
         f" '{path_str}'") from os_error
 
-#current: imdbrating.py [-h] [-url] imdb_url|imdb_code csv_file
-#  --url .url | --code code
-# imdbrating.py url .com .csv | imdbrating.py code code .csv
 def __main__():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-url", action="store_true")
-    args = parser.parse_known_args()
-
-    if args[0].url:
-        parser.add_argument("imdb_url", type=imdb_url_type,
-        help="url of a show on imdb.")
-    else:
-        parser.add_argument("imdb_code", type=imdb_code_type,
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("-url",
+        type=imdb_url_type,
+        nargs=1,
+        metavar="imdb_url",
         help="Code associated with a show on IMDb found in the url on the main page."
         " It will contain two lower-case t's followed by some (about seven) digits.")
+    group.add_argument("-code",
+        type=imdb_code_type,
+        nargs=1, metavar="imdb_code",
+        help="url of a show on imdb.")
+
     parser.add_argument("csv_file", type=csv_file_type,
         help="File name with a .csv extension."
         " If this file already exists it will be overwitten.")
     args = parser.parse_args()
+    print(args)
 
+    code = (args.url or args.code)[0]
     try:
         with args.csv_file as csv:
-            csv.write(IMDBInfoGrabber.get_imdb_info_for_show(
-                args.imdb_url if args.url else args.imdb_code))
+            csv.write(IMDBInfoGrabber.get_imdb_info_for_show(code))
     except error:
         print(sys.exc_info()[1])
 
