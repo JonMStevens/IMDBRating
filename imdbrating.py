@@ -175,13 +175,12 @@ def __main__():
         type=imdb_url_type,
         nargs=1,
         metavar="imdb_url",
-        help="Code associated with a show on IMDb found in the url on the main page."
-        " It will contain two lower-case t's followed by some (about seven) digits.")
+        help="url of a show on imdb.")
     group.add_argument("-code",
         type=imdb_code_type,
         nargs=1, metavar="imdb_code",
-        help="url of a show on imdb.")
-
+        help="Code associated with a show on IMDb found in the url on the main page."
+        " It will contain two lower-case t's followed by some (about seven) digits.")
     parser.add_argument("csv_file", type=csv_file_type,
         help="File name with a .csv extension."
         " If this file already exists it will be overwitten.")
