@@ -135,7 +135,7 @@ def imdb_code_type(code_str):
     if code_str == "":
         raise argparse.ArgumentTypeError("IMDb Code was empty string")
     if re.fullmatch(r"^tt\d+$", code_str) is None:
-        raise argparse.ArgumentTypeError("IMDb Code did not match expected format")
+        raise argparse.ArgumentTypeError(f"IMDb Code '{code_str}' did not match expected format")
     return code_str
 def imdb_url_type(url):
     """argument type checker for imdb url str"""
@@ -147,7 +147,7 @@ def imdb_url_type(url):
     try:
         imdb_code = imdb_code_re.search(urllib.parse.urlparse(url).path).group().rstrip("/")
     except AttributeError as e:
-        raise argparse.ArgumentTypeError("Could not find idmb code with given URL."
+        raise argparse.ArgumentTypeError(f"Could not find idmb code with given URL '{url}'."
         " URL must be from a TV show or TV season page on IMDb."
         ) from e
     return imdb_code_type(imdb_code)
@@ -158,7 +158,8 @@ def csv_file_type(path_str):
     if path_str == "":
         raise argparse.ArgumentTypeError("CSV file name parameter was empty string")
     if re.match(r"^[\w,\s-]+\.csv$", path_str) is None:
-        raise argparse.ArgumentTypeError("CSV file name parameter not in the correct format. "
+        raise argparse.ArgumentTypeError("CSV file name parameter "
+        f"'{path_str}' not in the correct format. "
         "It should be something like example.csv")
     try:
         return open(path_str, "w", encoding="utf-8")
