@@ -145,7 +145,12 @@ def imdb_url_type(url):
         raise argparse.ArgumentTypeError("URL was empty string")
     imdb_code_re = re.compile(r"tt\d+/")
     try:
-        imdb_code = imdb_code_re.search(urllib.parse.urlparse(url).path).group().rstrip("/")
+        parsed_url = urllib.parse.urlparse(url)
+        if parsed_url.scheme not in ["http", "https"]:
+            raise AttributeError("URL does not have http or https scheme")
+        if ".imdb." not in parsed_url.netloc:
+            raise AttributeError("URL was not from IMDb")
+        imdb_code = imdb_code_re.search(parsed_url.path).group().rstrip("/")
     except AttributeError as e:
         raise argparse.ArgumentTypeError(f"Could not find idmb code with given URL '{url}'."
         " URL must be from a TV show or TV season page on IMDb."
