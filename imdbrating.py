@@ -163,7 +163,7 @@ def csv_file_type(path_str):
     try:
         return open(path_str, "w", encoding="utf-8")
     except OSError as os_error:
-        print (type(error))
+
         raise argparse.ArgumentTypeError("CSV file could not be opened using file name:"
         f" '{path_str}'") from os_error
 
@@ -185,7 +185,6 @@ def __main__():
         help="File name with a .csv extension."
         " If this file already exists it will be overwitten.")
     args = parser.parse_args()
-    print(args)
 
     code = (args.url or args.code)[0]
     try:
