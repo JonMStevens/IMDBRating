@@ -2,7 +2,7 @@
 
 Python script that gets info about TV episodes from IMDb and lists that info in a CSV. This information includes the season number, episode number, air date, title, average rating on IMDb, and the number of ratings the episode recieved. This file can then be input into a spreadsheet program and allow you to see trends, high points, and low points in fan reception of a particular series.
 
-usage: imdbrating.py [-h] (-url imdb_url | -code imdb_code) csv_file
+usage: ```imdbrating.py [-h] (-url imdb_url | -code imdb_code) csv_file```
 
 The imdb_url parameter should be the URL from either the main show page or the page of a specific season of a TV show on IDMb. The URL will contain a code as described below.
 
