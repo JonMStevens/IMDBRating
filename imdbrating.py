@@ -9,6 +9,7 @@ pass in an imdb code (found in url) and write returned string to file
 from os import error
 import sys
 import urllib.request
+import urllib.parse
 import re
 import argparse
 
@@ -134,9 +135,27 @@ def imdb_code_type(code_str):
     if code_str == "":
         raise argparse.ArgumentTypeError("IMDb Code was empty string")
     if re.fullmatch(r"^tt\d+$", code_str) is None:
-        raise argparse.ArgumentTypeError("IMDb Code did not match expected format")
+        raise argparse.ArgumentTypeError(f"IMDb Code '{code_str}' did not match expected format")
     return code_str
-
+def imdb_url_type(url):
+    """argument type checker for imdb url str"""
+    if not isinstance(url, str):
+        raise argparse.ArgumentTypeError("URL was not type string")
+    if url == "":
+        raise argparse.ArgumentTypeError("URL was empty string")
+    imdb_code_re = re.compile(r"tt\d+/")
+    try:
+        parsed_url = urllib.parse.urlparse(url)
+        if parsed_url.scheme not in ["http", "https"]:
+            raise AttributeError("URL does not have http or https scheme")
+        if ".imdb." not in parsed_url.netloc:
+            raise AttributeError("URL was not from IMDb")
+        imdb_code = imdb_code_re.search(parsed_url.path).group().rstrip("/")
+    except AttributeError as e:
+        raise argparse.ArgumentTypeError(f"Could not find idmb code with given URL '{url}'."
+        " URL must be from a TV show or TV season page on IMDb."
+        ) from e
+    return imdb_code_type(imdb_code)
 def csv_file_type(path_str):
     """argument type checker for csv file name"""
     if not isinstance(path_str, str):
@@ -144,19 +163,27 @@ def csv_file_type(path_str):
     if path_str == "":
         raise argparse.ArgumentTypeError("CSV file name parameter was empty string")
     if re.match(r"^[\w,\s-]+\.csv$", path_str) is None:
-        raise argparse.ArgumentTypeError("CSV file name parameter not in the correct format. "
+        raise argparse.ArgumentTypeError("CSV file name parameter "
+        f"'{path_str}' not in the correct format. "
         "It should be something like example.csv")
     try:
         return open(path_str, "w", encoding="utf-8")
     except OSError as os_error:
-        print (type(error))
+
         raise argparse.ArgumentTypeError("CSV file could not be opened using file name:"
         f" '{path_str}'") from os_error
 
-
 def __main__():
     parser = argparse.ArgumentParser()
-    parser.add_argument("imdb_code", type=imdb_code_type,
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("-url",
+        type=imdb_url_type,
+        nargs=1,
+        metavar="imdb_url",
+        help="url of a show on imdb.")
+    group.add_argument("-code",
+        type=imdb_code_type,
+        nargs=1, metavar="imdb_code",
         help="Code associated with a show on IMDb found in the url on the main page."
         " It will contain two lower-case t's followed by some (about seven) digits.")
     parser.add_argument("csv_file", type=csv_file_type,
@@ -164,10 +191,10 @@ def __main__():
         " If this file already exists it will be overwitten.")
     args = parser.parse_args()
 
+    code = (args.url or args.code)[0]
     try:
         with args.csv_file as csv:
-            csv.write(IMDBInfoGrabber.get_imdb_info_for_show(
-                args.imdb_code))
+            csv.write(IMDBInfoGrabber.get_imdb_info_for_show(code))
     except error:
         print(sys.exc_info()[1])
 
