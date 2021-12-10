@@ -38,19 +38,20 @@ class IMDBInfoGrabber:
         soup  = BeautifulSoup(season_html, features="html.parser")
         season_count = IMDBInfoGrabber.__get_season_count(soup)
         csv_text += IMDBInfoGrabber.__get_episode_info_for_season(
-            season_html, 1)
+            soup, 1)
 
         for i in range(2, season_count + 1):
             print("Working on Season " + str(i))
             season_html = IMDBInfoGrabber.__get_season_html(imdb_title_id, i)
+            soup  = BeautifulSoup(season_html, features="html.parser")
             csv_text += IMDBInfoGrabber.__get_episode_info_for_season(
-                season_html, i)
+                soup, i)
 
         print("OK")
         return csv_text.strip()
 
     @staticmethod
-    def __get_episode_info_for_season(html, season_number):
+    def __get_episode_info_for_season(soup: BeautifulSoup, season_number: int) -> str:
         """Helper function that gets stats for each episode of a season
 
         arguments
@@ -60,34 +61,26 @@ class IMDBInfoGrabber:
         return:
         string -- episode stats. stats separated by commas, each episode separated by newline
         """
-        # todo could this be sped up by using find inside the block instead of regex?
-        episode_block_re = re.compile(
-            r"<div class=\"info\" itemprop=\"episodes\".*?"
-            r"</div>.*?ipl-rating-star__total-votes.*?</span>", re.DOTALL)
-        episode_number_re = re.compile(r"(?<=episodeNumber\" content=\")\d+")
-        air_date_re = re.compile(
-            r"(?<=airdate\">..            )\d{1,2} [A-Z][a-z]{2}\.? \d{2,4}")
-        title_re = re.compile(r"(?<=title=\").*\" itemprop")
-        rating_re = re.compile(r"(?<=ipl-rating-star__rating\">)\d\.\d")
-        rate_count = re.compile(
-            r"(?<=ipl-rating-star__total-votes\">\()(\d{1,3},)*?\d{1,3}\)")
-        csv_lines = []
-        episode_info_blocks_html = episode_block_re.findall(html)
-
-        if len(episode_info_blocks_html) == 0:
+        episode_blocks = soup.find_all("div", class_="info")
+        if not episode_blocks:
             raise error(
                 "Could not find episodes for this show. This script may need fixing")
 
-        for block in episode_info_blocks_html:
-            line = str(season_number) + ","
-            line += episode_number_re.search(block).group() + ","
-            line += air_date_re.search(block).group() + ","
-            line += "\"" + \
-                title_re.search(block).group().rstrip(
-                    " itemprop").replace("\\'", "'") + ","
-            line += rating_re.search(block).group() + ","
-            line += rate_count.search(block).group().replace(",",
-                                                            "").rstrip(")")
+        csv_lines = []
+
+        for episode_block in episode_blocks:
+            episode_number = episode_block.select('meta[itemprop="episodeNumber"]')[0].attrs["content"]
+            air_date = episode_block.find("div", class_="airdate").contents[0].strip("['\\n\t ")
+            title = '"' + episode_block.select('a[itemprop="name"]')[0].attrs['\\ntitle'].replace("\\'", "'") + '"'
+            rating = episode_block.find('span', class_="ipl-rating-star__rating").contents[0]
+            rate_count = episode_block.find('span', class_="ipl-rating-star__total-votes").contents[0].strip("()").replace(",","")
+
+            line = (str(season_number) + "," +
+            episode_number + "," +
+            air_date + "," +
+            title + "," +
+            rating + "," +
+            rate_count)
             csv_lines.append(line)
 
         return "\n".join(csv_lines) + "\n"
@@ -139,6 +132,8 @@ def imdb_code_type(code_str):
     return code_str
 def imdb_url_type(url):
     """argument type checker for imdb url str"""
+
+    #todo & breaks script in command line
     if not isinstance(url, str):
         raise argparse.ArgumentTypeError("URL was not type string")
     if url == "":
