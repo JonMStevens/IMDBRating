@@ -12,6 +12,7 @@ import urllib.request
 import urllib.parse
 import re
 import argparse
+from bs4 import BeautifulSoup
 
 class IMDBInfoGrabber:
     """class used for retrieving csv info.
@@ -34,11 +35,12 @@ class IMDBInfoGrabber:
         csv_text = "Season,Episode,Air Date,Title,Rating,Rating Count\n"
 
         season_html = IMDBInfoGrabber.__get_season_html(imdb_title_id, 1)
-        season__count = IMDBInfoGrabber.__get_season_count(season_html)
+        soup  = BeautifulSoup(season_html, features="html.parser")
+        season_count = IMDBInfoGrabber.__get_season_count(soup)
         csv_text += IMDBInfoGrabber.__get_episode_info_for_season(
             season_html, 1)
 
-        for i in range(2, season__count + 1):
+        for i in range(2, season_count + 1):
             print("Working on Season " + str(i))
             season_html = IMDBInfoGrabber.__get_season_html(imdb_title_id, i)
             csv_text += IMDBInfoGrabber.__get_episode_info_for_season(
@@ -109,24 +111,22 @@ class IMDBInfoGrabber:
             raise ValueError(
                 "A season page could not be found using the given IMDb Title ID") from e
     @staticmethod
-    def __get_season_count(html):
+    def __get_season_count(soup):
         """helper function that returns number of seasons that a show has
 
         arguments:
-        html (string) -- html from the page of a season, usually the first.
+        soup (bs4.BeautifulSoup) -- BeautifulSoup object made from html from the page of a season,
+                                    usually the first.
 
         return:
         int -- season count
         """
         try:
-            season_dropdown_html = re.search(
-                "<select id=\"bySeason\".*?</select>", html).group()
-        except error as e:
-            raise error(
+            return len(soup.find('select', id="bySeason").findChildren('option'))
+        except AttributeError as e:
+            raise ValueError(
                 "Could not find number of seasons in given HTML."
                 " This script may need fixing") from e
-
-        return len(re.findall("<option.*?</option>", season_dropdown_html))
 
 def imdb_code_type(code_str):
     """argument type checker for imdb code str"""
