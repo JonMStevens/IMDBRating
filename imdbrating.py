@@ -12,6 +12,7 @@ import urllib.request
 import urllib.parse
 import re
 import argparse
+from bs4 import BeautifulSoup
 
 class IMDBInfoGrabber:
     """class used for retrieving csv info.
@@ -34,21 +35,23 @@ class IMDBInfoGrabber:
         csv_text = "Season,Episode,Air Date,Title,Rating,Rating Count\n"
 
         season_html = IMDBInfoGrabber.__get_season_html(imdb_title_id, 1)
-        season__count = IMDBInfoGrabber.__get_season_count(season_html)
+        soup  = BeautifulSoup(season_html, features="html.parser")
+        season_count = IMDBInfoGrabber.__get_season_count(soup)
         csv_text += IMDBInfoGrabber.__get_episode_info_for_season(
-            season_html, 1)
+            soup, 1)
 
-        for i in range(2, season__count + 1):
+        for i in range(2, season_count + 1):
             print("Working on Season " + str(i))
             season_html = IMDBInfoGrabber.__get_season_html(imdb_title_id, i)
+            soup  = BeautifulSoup(season_html, features="html.parser")
             csv_text += IMDBInfoGrabber.__get_episode_info_for_season(
-                season_html, i)
+                soup, i)
 
         print("OK")
         return csv_text.strip()
 
     @staticmethod
-    def __get_episode_info_for_season(html, season_number):
+    def __get_episode_info_for_season(soup: BeautifulSoup, season_number: int) -> str:
         """Helper function that gets stats for each episode of a season
 
         arguments
@@ -58,34 +61,30 @@ class IMDBInfoGrabber:
         return:
         string -- episode stats. stats separated by commas, each episode separated by newline
         """
-        # todo could this be sped up by using find inside the block instead of regex?
-        episode_block_re = re.compile(
-            r"<div class=\"info\" itemprop=\"episodes\".*?"
-            r"</div>.*?ipl-rating-star__total-votes.*?</span>", re.DOTALL)
-        episode_number_re = re.compile(r"(?<=episodeNumber\" content=\")\d+")
-        air_date_re = re.compile(
-            r"(?<=airdate\">..            )\d{1,2} [A-Z][a-z]{2}\.? \d{2,4}")
-        title_re = re.compile(r"(?<=title=\").*\" itemprop")
-        rating_re = re.compile(r"(?<=ipl-rating-star__rating\">)\d\.\d")
-        rate_count = re.compile(
-            r"(?<=ipl-rating-star__total-votes\">\()(\d{1,3},)*?\d{1,3}\)")
-        csv_lines = []
-        episode_info_blocks_html = episode_block_re.findall(html)
-
-        if len(episode_info_blocks_html) == 0:
+        episode_blocks = soup.find_all("div", class_="info")
+        if not episode_blocks:
             raise error(
                 "Could not find episodes for this show. This script may need fixing")
 
-        for block in episode_info_blocks_html:
-            line = str(season_number) + ","
-            line += episode_number_re.search(block).group() + ","
-            line += air_date_re.search(block).group() + ","
-            line += "\"" + \
-                title_re.search(block).group().rstrip(
-                    " itemprop").replace("\\'", "'") + ","
-            line += rating_re.search(block).group() + ","
-            line += rate_count.search(block).group().replace(",",
-                                                            "").rstrip(")")
+        csv_lines = []
+
+        for episode_block in episode_blocks:
+            episode_number = episode_block.find("meta", itemprop="episodeNumber")['content']
+            air_date = episode_block.find("div", class_="airdate").text
+            title = episode_block.find("a", itemprop="name").text
+            rating = episode_block.find('span', class_="ipl-rating-star__rating").text
+            rate_count = episode_block.find('span', class_="ipl-rating-star__total-votes").text
+
+            air_date  = air_date.strip("['\\n\t ")
+            title = '"' + title.replace("\\'", "'") + '"'
+            rate_count = rate_count.strip("()").replace(",","")
+
+            line = (str(season_number) + "," +
+            episode_number + "," +
+            air_date + "," +
+            title + "," +
+            rating + "," +
+            rate_count)
             csv_lines.append(line)
 
         return "\n".join(csv_lines) + "\n"
@@ -109,24 +108,22 @@ class IMDBInfoGrabber:
             raise ValueError(
                 "A season page could not be found using the given IMDb Title ID") from e
     @staticmethod
-    def __get_season_count(html):
+    def __get_season_count(soup):
         """helper function that returns number of seasons that a show has
 
         arguments:
-        html (string) -- html from the page of a season, usually the first.
+        soup (bs4.BeautifulSoup) -- BeautifulSoup object made from html from the page of a season,
+                                    usually the first.
 
         return:
         int -- season count
         """
         try:
-            season_dropdown_html = re.search(
-                "<select id=\"bySeason\".*?</select>", html).group()
-        except error as e:
-            raise error(
+            return len(soup.find('select', id="bySeason").findChildren('option'))
+        except AttributeError as e:
+            raise ValueError(
                 "Could not find number of seasons in given HTML."
                 " This script may need fixing") from e
-
-        return len(re.findall("<option.*?</option>", season_dropdown_html))
 
 def imdb_code_type(code_str):
     """argument type checker for imdb code str"""
@@ -139,6 +136,8 @@ def imdb_code_type(code_str):
     return code_str
 def imdb_url_type(url):
     """argument type checker for imdb url str"""
+
+    #todo & breaks script in command line
     if not isinstance(url, str):
         raise argparse.ArgumentTypeError("URL was not type string")
     if url == "":

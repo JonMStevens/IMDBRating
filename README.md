@@ -1,5 +1,7 @@
 # IMDBRating
 
+Note: Uses [Beautiful Soup](https://beautiful-soup-4.readthedocs.io/en/latest/)
+
 Python script that gets info about TV episodes from IMDb and lists that info in a CSV. This information includes the season number, episode number, air date, title, average rating on IMDb, and the number of ratings the episode recieved. This file can then be input into a spreadsheet program and allow you to see trends, high points, and low points in fan reception of a particular series.
 
 usage: ```imdbrating.py [-h] (-url imdb_url | -code imdb_code) csv_file```
