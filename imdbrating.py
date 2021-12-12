@@ -137,7 +137,6 @@ def imdb_code_type(code_str):
 def imdb_url_type(url):
     """argument type checker for imdb url str"""
 
-    #todo & breaks script in command line
     if not isinstance(url, str):
         raise argparse.ArgumentTypeError("URL was not type string")
     if url == "":
