@@ -69,11 +69,20 @@ class IMDBInfoGrabber:
         csv_lines = []
 
         for episode_block in episode_blocks:
-            episode_number = episode_block.find("meta", itemprop="episodeNumber")['content']
-            air_date = episode_block.find("div", class_="airdate").text
-            title = episode_block.find("a", itemprop="name").text
-            rating = episode_block.find('span', class_="ipl-rating-star__rating").text
-            rate_count = episode_block.find('span', class_="ipl-rating-star__total-votes").text
+            episode_number_element = episode_block.find("meta", itemprop="episodeNumber")
+            episode_number = episode_number_element['content']
+
+            air_date_element = episode_block.find("div", class_="airdate")
+            air_date = "" if not air_date_element else air_date_element.text
+
+            title_element = episode_block.find("a", itemprop="name")
+            title = "" if not title_element else title_element.text
+
+            rating_element = episode_block.find('span', class_="ipl-rating-star__rating")
+            rating = "" if not rating_element else rating_element.text
+
+            rate_count_element = episode_block.find('span', class_="ipl-rating-star__total-votes")
+            rate_count = "" if not rate_count_element else rate_count_element.text
 
             air_date  = air_date.strip("['\\n\t ")
             title = '"' + title.replace("\\'", "'") + '"'
