@@ -159,7 +159,7 @@ def imdb_url_type(url):
             raise AttributeError("URL was not from IMDb")
         imdb_code = imdb_code_re.search(parsed_url.path).group().rstrip("/")
     except AttributeError as e:
-        raise argparse.ArgumentTypeError(f"Could not find idmb code with given URL '{url}'."
+        raise argparse.ArgumentTypeError(f"Could not find imdb code with given URL '{url}'."
         " URL must be from a TV show or TV season page on IMDb."
         ) from e
     return imdb_code_type(imdb_code)
