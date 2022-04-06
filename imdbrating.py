@@ -150,7 +150,7 @@ def imdb_url_type(url):
         raise argparse.ArgumentTypeError("URL was not type string")
     if url == "":
         raise argparse.ArgumentTypeError("URL was empty string")
-    imdb_code_re = re.compile(r"tt\d+/")
+    imdb_code_re = re.compile(r"tt\d+(/|$)")
     try:
         parsed_url = urllib.parse.urlparse(url)
         if parsed_url.scheme not in ["http", "https"]:
