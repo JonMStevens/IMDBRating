@@ -12,8 +12,58 @@ import urllib.request
 import urllib.parse
 import re
 import argparse
+import unittest
 from bs4 import BeautifulSoup
 
+class TestIMDBInfoGrabber(unittest.TestCase):
+    """tests IMDBInfoGrabber.get_imdb_info_for_show"""
+    def test_happy(self):
+        """happy path test
+        imdb code for Home Movies"""
+        self.assertIsInstance(IMDBInfoGrabber.get_imdb_info_for_show("tt0197159"), str)
+        self.assertNotEqual(IMDBInfoGrabber.get_imdb_info_for_show("tt0197159"), "")
+    def test_movie(self):
+        """test imdb code of movie
+        imdb code for Sleeping Beauty"""
+        with self.assertRaises(ValueError):
+            IMDBInfoGrabber.get_imdb_info_for_show("tt0053285")
+    def test_episode(self):
+        """test imdb code of episode
+        imdb code for futurama: luck of the fryish"""
+        with self.assertRaises(ValueError):
+                IMDBInfoGrabber.get_imdb_info_for_show("tt0768678")
+    def test_nothing_code(self):
+        """test valid imdb code that points to nothing"""
+        with self.assertRaises(ValueError):
+            IMDBInfoGrabber.get_imdb_info_for_show("tt0000000")
+    def test_bad_code(self):
+        """test invalid imdb code"""
+        with self.assertRaises(ValueError):
+            IMDBInfoGrabber.get_imdb_info_for_show("tt12")
+        with self.assertRaises(ValueError):
+            IMDBInfoGrabber.get_imdb_info_for_show("tt1212121212121212")
+    def test_non_code_string(self):
+        """test a string that is not a code"""
+        with self.assertRaises(ValueError):
+            IMDBInfoGrabber.get_imdb_info_for_show("t")
+    def test_non_code_empty_string(self):
+        """test empty string that is not a code"""
+        with self.assertRaises(ValueError):
+            IMDBInfoGrabber.get_imdb_info_for_show("")
+    def test_non_code_string_class(self):
+        """test passing string class"""
+        #todo: converts to /title/<class 'str'>/episodes?season=1
+        # does this: raise InvalidURL(f"URL can't contain control characters. {url!r} "
+        with self.assertRaises(ValueError):
+            IMDBInfoGrabber.get_imdb_info_for_show(str)
+    def test_non_code_int(self):
+        """test an int that is not a code"""
+        with self.assertRaises(ValueError):
+            IMDBInfoGrabber.get_imdb_info_for_show(0)
+    def test_non_code_float(self):
+        """test a float that is not a code"""
+        with self.assertRaises(ValueError):
+            IMDBInfoGrabber.get_imdb_info_for_show(1.2)
 class IMDBInfoGrabber:
     """class used for retrieving csv info.
     Main method is get_imdb_info_for_show
