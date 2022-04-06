@@ -2,6 +2,7 @@
 Call static method get_imdb_info_for_show,
 pass in an imdb code (found in url) and write returned string to file
 """
+#todo: add types to functions
 # speed up
 # could add some brief search feature?
 # this might be a good opportunity for async. do multiple seasons at once
