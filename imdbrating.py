@@ -2,6 +2,8 @@
 Call static method get_imdb_info_for_show,
 pass in an imdb code (found in url) and write returned string to file
 """
+#todo: add types to functions
+#todo: move unit tests
 # speed up
 # could add some brief search feature?
 # this might be a good opportunity for async. do multiple seasons at once
@@ -159,7 +161,7 @@ def imdb_url_type(url):
             raise AttributeError("URL was not from IMDb")
         imdb_code = imdb_code_re.search(parsed_url.path).group().rstrip("/")
     except AttributeError as e:
-        raise argparse.ArgumentTypeError(f"Could not find idmb code with given URL '{url}'."
+        raise argparse.ArgumentTypeError(f"Could not find imdb code with given URL '{url}'."
         " URL must be from a TV show or TV season page on IMDb."
         ) from e
     return imdb_code_type(imdb_code)
@@ -180,7 +182,11 @@ def csv_file_type(path_str):
         raise argparse.ArgumentTypeError("CSV file could not be opened using file name:"
         f" '{path_str}'") from os_error
 
-def __main__():
+def parse_args(argv: list) -> argparse.Namespace:
+    """returns Namespace of args including:
+    args.url
+    args.code
+    args.csv_file"""
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-url",
@@ -196,8 +202,10 @@ def __main__():
     parser.add_argument("csv_file", type=csv_file_type,
         help="File name with a .csv extension."
         " If this file already exists it will be overwitten.")
-    args = parser.parse_args()
+    return parser.parse_args(argv)
 
+def __main__():
+    args = parse_args(sys.argv[1:])
     code = (args.url or args.code)[0]
     try:
         with args.csv_file as csv:
@@ -205,4 +213,5 @@ def __main__():
     except error:
         print(sys.exc_info()[1])
 
-__main__()
+if __name__ == "__main__":
+    __main__()
