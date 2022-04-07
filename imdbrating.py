@@ -2,12 +2,12 @@
 Call static method get_imdb_info_for_show,
 pass in an imdb code (found in url) and write returned string to file
 """
-#todo: add types to functions
 # speed up
 # could add some brief search feature?
 # this might be a good opportunity for async. do multiple seasons at once
 
 from http.client import InvalidURL
+from io import TextIOWrapper
 from os import error
 import sys
 import urllib.request
@@ -21,7 +21,7 @@ class IMDBInfoGrabber:
     Main method is get_imdb_info_for_show
     """
     @staticmethod
-    def get_imdb_info_for_show(imdb_title_id):
+    def get_imdb_info_for_show(imdb_title_id: str) -> str:
         """Returns info to write to csv
 
         arguments:
@@ -101,7 +101,7 @@ class IMDBInfoGrabber:
         return "\n".join(csv_lines) + "\n"
 
     @staticmethod
-    def __get_season_html(imdb_title_id, season_number):
+    def __get_season_html(imdb_title_id: str, season_number: int) -> str:
         """helper function that retrieves html for a season of a show
 
         arguments:
@@ -119,7 +119,7 @@ class IMDBInfoGrabber:
             raise ValueError(
                 "A season page could not be found using the given IMDb Title ID") from e
     @staticmethod
-    def __get_season_count(soup):
+    def __get_season_count(soup: BeautifulSoup) -> int:
         """helper function that returns number of seasons that a show has
 
         arguments:
@@ -135,8 +135,7 @@ class IMDBInfoGrabber:
             raise ValueError(
                 "Could not find number of seasons in given HTML."
                 " This script may need fixing") from e
-
-def imdb_code_type(code_str):
+def imdb_code_type(code_str: str) -> str:
     """argument type checker for imdb code str"""
     if not isinstance(code_str, str):
         raise argparse.ArgumentTypeError("IMDb Code was not type string")
@@ -145,7 +144,7 @@ def imdb_code_type(code_str):
     if re.fullmatch(r"^tt\d+$", code_str) is None:
         raise argparse.ArgumentTypeError(f"IMDb Code '{code_str}' did not match expected format")
     return code_str
-def imdb_url_type(url):
+def imdb_url_type(url: str) -> str:
     """argument type checker for imdb url str"""
 
     if not isinstance(url, str):
@@ -165,7 +164,7 @@ def imdb_url_type(url):
         " URL must be from a TV show or TV season page on IMDb."
         ) from e
     return imdb_code_type(imdb_code)
-def csv_file_type(path_str):
+def csv_file_type(path_str: str) -> TextIOWrapper:
     """argument type checker for csv file name"""
     if not isinstance(path_str, str):
         raise argparse.ArgumentTypeError("CSV file name parameter was not a string")
