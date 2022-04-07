@@ -8,6 +8,7 @@ pass in an imdb code (found in url) and write returned string to file
 # could add some brief search feature?
 # this might be a good opportunity for async. do multiple seasons at once
 
+from http.client import InvalidURL
 from os import error
 import sys
 import urllib.request
@@ -115,7 +116,7 @@ class IMDBInfoGrabber:
             with urllib.request.urlopen("https://www.imdb.com/title/"
             f"{imdb_title_id}/episodes?season={season_number}") as response:
                 return str(response.read())
-        except error as e:
+        except (error, InvalidURL) as e:
             raise ValueError(
                 "A season page could not be found using the given IMDb Title ID") from e
     @staticmethod
