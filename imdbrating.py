@@ -213,4 +213,5 @@ def __main__():
     except error:
         print(sys.exc_info()[1])
 
-__main__()
+if __name__ == "__main__":
+    __main__()
