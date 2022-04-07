@@ -13,6 +13,7 @@ class Test_IMDBInfoGrabber(unittest.TestCase):
         imdb code for Home Movies"""
         self.assertIsInstance(IMDBInfoGrabber.get_imdb_info_for_show("tt0197159"), str)
         self.assertNotEqual(IMDBInfoGrabber.get_imdb_info_for_show("tt0197159"), "")
+        # add more to check if output is what's expected
     def test_movie(self):
         """test imdb code of movie
         imdb code for Sleeping Beauty"""
