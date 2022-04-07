@@ -231,7 +231,11 @@ def csv_file_type(path_str):
         raise argparse.ArgumentTypeError("CSV file could not be opened using file name:"
         f" '{path_str}'") from os_error
 
-def __main__():
+def parse_args(argv: list) -> argparse.Namespace:
+    """returns Namespace of args including:
+    args.url
+    args.code
+    args.csv_file"""
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-url",
@@ -247,8 +251,10 @@ def __main__():
     parser.add_argument("csv_file", type=csv_file_type,
         help="File name with a .csv extension."
         " If this file already exists it will be overwitten.")
-    args = parser.parse_args()
+    return parser.parse_args(argv)
 
+def __main__():
+    args = parse_args(sys.argv[1:])
     code = (args.url or args.code)[0]
     try:
         with args.csv_file as csv:
