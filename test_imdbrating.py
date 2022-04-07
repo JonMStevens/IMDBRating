@@ -43,8 +43,6 @@ class Test_IMDBInfoGrabber(unittest.TestCase):
             IMDBInfoGrabber.get_imdb_info_for_show("")
     def test_non_code_string_class(self):
         """test passing string class"""
-        #todo: converts to /title/<class 'str'>/episodes?season=1
-        # does this: raise InvalidURL(f"URL can't contain control characters. {url!r} "
         with self.assertRaises(ValueError):
             IMDBInfoGrabber.get_imdb_info_for_show(str)
     def test_non_code_int(self):
