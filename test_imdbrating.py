@@ -11,9 +11,39 @@ class Test_IMDBInfoGrabber(unittest.TestCase):
     def test_happy(self):
         """happy path test
         imdb code for Home Movies"""
-        self.assertIsInstance(IMDBInfoGrabber.get_imdb_info_for_show("tt0197159"), str)
-        self.assertNotEqual(IMDBInfoGrabber.get_imdb_info_for_show("tt0197159"), "")
-        # add more to check if output is what's expected
+        info = IMDBInfoGrabber.get_imdb_info_for_show("tt0197159")
+        Test_IMDBInfoGrabber.assert_valid_output(self, info)
+    
+    def test_ongoing_show(self):
+        """happy path test ran on a show that is ongoing
+        ongoing shows are often missing information on upcoming episodes.
+        This is a test to make sure missing information is handled propertly
+        imdb code for Saturday Night Live"""
+        info = IMDBInfoGrabber.get_imdb_info_for_show("tt0072562")
+        Test_IMDBInfoGrabber.assert_valid_output(self, info)
+    
+    @staticmethod
+    def assert_valid_output(self, output):
+        self.assertIsInstance(output, str)
+        self.assertNotEqual(output, "")
+        episodes = output.split("\n")
+        self.assertGreater(len(episodes), 1)
+        self.assertEqual(episodes[0], "Season,Episode,Air Date,Title,Rating,Rating Count")
+        for episode in episodes[1:]:
+            title_start = episode.find("\"")
+            title_end = episode.find("\"", title_start + 1)
+            title = episode[title_start:title_end + 1]
+            cols = (episode[0:title_start -1]  + episode[title_end + 1:]).split(",")
+            cols.insert(3, title)
+            self.assertEqual(len(cols), 6)
+            self.assertTrue(str.isnumeric(cols[0]))
+            self.assertTrue(str.isnumeric(cols[1]))
+            self.assertRegexpMatches(cols[2], r"\d{1,2} ([A-Z][a-z]{2}\.|May) \d{4}")
+            self.assertEqual(title[0],"\"")
+            self.assertEqual(title[-1],"\"")
+            self.assertGreater(len(title),2)
+            self.assertRegexpMatches(cols[4], r"\d\.\d")
+            self.assertTrue(str.isnumeric(cols[5]))
     def test_movie(self):
         """test imdb code of movie
         imdb code for Sleeping Beauty"""
